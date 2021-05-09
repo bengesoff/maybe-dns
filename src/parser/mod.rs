@@ -1,5 +1,6 @@
 use std::str;
 
+use nom::bits;
 use nom::error::{make_error, ErrorKind};
 use nom::multi::{count, fold_many1, length_data};
 use nom::number::complete::{be_u16, u8};
@@ -7,7 +8,7 @@ use nom::sequence::tuple;
 use nom::IResult;
 
 use errors::ParseError;
-use message::{Header, Message, Query};
+use message::{Flags, Header, Message, Query, QueryResponse, ResponseCode};
 
 pub mod errors;
 pub mod message;
@@ -28,16 +29,16 @@ fn message(input: &[u8]) -> IResult<&[u8], Message> {
 }
 
 fn header(input: &[u8]) -> IResult<&[u8], Header> {
-    let (input, header_fields) = count(be_u16, 6)(input)?;
+    let (input, (t_id, flags, header_fields)) = tuple((be_u16, flags, count(be_u16, 4)))(input)?;
     Ok((
         input,
         Header {
-            transaction_id: header_fields[0],
-            // TODO: flags: header_fields[1],
-            num_questions: header_fields[2],
-            num_answers: header_fields[3],
-            num_authorities: header_fields[4],
-            num_additionals: header_fields[5],
+            transaction_id: t_id,
+            flags,
+            num_questions: header_fields[0],
+            num_answers: header_fields[1],
+            num_authorities: header_fields[2],
+            num_additionals: header_fields[3],
         },
     ))
 }
@@ -52,6 +53,28 @@ fn query(input: &[u8]) -> IResult<&[u8], Query> {
             class,
         },
     ))
+}
+
+fn flags(input: &[u8]) -> IResult<&[u8], Flags> {
+    bits::bits::<_, _, nom::error::Error<(&[u8], usize)>, _, _>(|i| {
+        let (i, qr) = bits::complete::take::<_, u8, _, _>(1usize)(i)?;
+        let (i, _) = bits::complete::take::<_, u8, _, _>(11usize)(i)?;
+        let (i, rc) = bits::complete::take::<_, u8, _, _>(4usize)(i)?;
+        Ok((i, Flags {
+            message_type: match qr {
+                0 => QueryResponse::Query,
+                1 => QueryResponse::Response,
+                _ => unreachable!()
+            },
+            response_code: match rc {
+                0 => ResponseCode::NoError,
+                1 => ResponseCode::FormatError,
+                2 => ResponseCode::ServerError,
+                3 => ResponseCode::NameError,
+                _ => unimplemented!()
+            },
+        }))
+    })(input)
 }
 
 fn name(input: &[u8]) -> IResult<&[u8], Vec<&str>> {

@@ -7,7 +7,7 @@ pub struct Message {
 #[derive(Debug)]
 pub struct Header {
     pub transaction_id: u16,
-    //pub flags: Flags,
+    pub flags: Flags,
     pub num_questions: u16,
     pub num_answers: u16,
     pub num_authorities: u16,
@@ -21,17 +21,22 @@ pub struct Query {
     pub class: u16,
 }
 
-struct Flags {
-    message_type: QueryResponse,
-    response_code: Error,
+#[derive(Debug)]
+pub struct Flags {
+    pub message_type: QueryResponse,
+    pub response_code: ResponseCode,
 }
 
-enum QueryResponse {
+#[derive(Debug)]
+pub enum QueryResponse {
     Query,
     Response,
 }
 
-enum Error {
+#[derive(Debug)]
+pub enum ResponseCode {
     NoError,
-    NotFound,
+    FormatError,
+    ServerError,
+    NameError,
 }
