@@ -12,7 +12,7 @@ async fn main() -> io::Result<()> {
         let (len, addr) = sock.recv_from(&mut buf).await?;
         println!("{:?} bytes received from {:?}", len, addr);
 
-        let (_, msg) = parser::message(&buf).unwrap();
+        let msg = parser::parse_message(&buf)?;
         println!("decoded {:?}", msg);
 
         let len = sock.send_to(&buf[..len], addr).await?;

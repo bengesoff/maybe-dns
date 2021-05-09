@@ -1,16 +1,27 @@
-pub mod message;
+use std::str;
 
-extern crate nom;
-
-use message::{Header, Message, Query};
 use nom::error::{make_error, ErrorKind};
 use nom::multi::{count, fold_many1, length_data};
 use nom::number::complete::{be_u16, u8};
 use nom::sequence::tuple;
 use nom::IResult;
-use std::str;
 
-pub(crate) fn message(input: &[u8]) -> IResult<&[u8], Message> {
+use errors::ParseError;
+use message::{Header, Message, Query};
+
+pub mod errors;
+pub mod message;
+
+extern crate nom;
+
+pub fn parse_message(input: &[u8]) -> Result<Message, ParseError> {
+    match message(input).ok() {
+        None => Err(ParseError),
+        Some((_, msg)) => Ok(msg),
+    }
+}
+
+fn message(input: &[u8]) -> IResult<&[u8], Message> {
     let (input, header) = header(input)?;
     let (input, queries) = count(query, header.num_questions as usize)(input)?;
     Ok((input, Message { header, queries }))
