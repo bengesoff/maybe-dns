@@ -1,7 +1,7 @@
 use std::io;
+
 use tokio::net::UdpSocket;
 
-mod message;
 mod parser;
 
 #[tokio::main]
@@ -12,7 +12,7 @@ async fn main() -> io::Result<()> {
         let (len, addr) = sock.recv_from(&mut buf).await?;
         println!("{:?} bytes received from {:?}", len, addr);
 
-        let msg = parser::parse(&buf);
+        let (_, msg) = parser::message(&buf).unwrap();
         println!("decoded {:?}", msg);
 
         let len = sock.send_to(&buf[..len], addr).await?;

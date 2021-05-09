@@ -7,11 +7,11 @@ pub struct Message {
 #[derive(Debug)]
 pub struct Header {
     pub transaction_id: u16,
-    //flags: Flags,
+    //pub flags: Flags,
     pub num_questions: u16,
-    //num_answers: u16,
-    //num_authorities: u16,
-    //num_additionals: u16,
+    pub num_answers: u16,
+    pub num_authorities: u16,
+    pub num_additionals: u16,
 }
 
 #[derive(Debug)]
