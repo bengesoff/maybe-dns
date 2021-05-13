@@ -60,20 +60,25 @@ fn flags(input: &[u8]) -> IResult<&[u8], Flags> {
         let (i, qr) = bits::complete::take::<_, u8, _, _>(1usize)(i)?;
         let (i, _) = bits::complete::take::<_, u8, _, _>(11usize)(i)?;
         let (i, rc) = bits::complete::take::<_, u8, _, _>(4usize)(i)?;
-        Ok((i, Flags {
-            message_type: match qr {
-                0 => QueryResponse::Query,
-                1 => QueryResponse::Response,
-                _ => unreachable!()
+        let mt = match qr {
+            0 => Ok(QueryResponse::Query),
+            1 => Ok(QueryResponse::Response),
+            _ => Err(nom::Err::Error(make_error(i, ErrorKind::TagBits))),
+        }?;
+        let rc = match rc {
+            0 => Ok(ResponseCode::NoError),
+            1 => Ok(ResponseCode::FormatError),
+            2 => Ok(ResponseCode::ServerError),
+            3 => Ok(ResponseCode::NameError),
+            _ => Err(nom::Err::Error(make_error(i, ErrorKind::TagBits))),
+        }?;
+        Ok((
+            i,
+            Flags {
+                message_type: mt,
+                response_code: rc,
             },
-            response_code: match rc {
-                0 => ResponseCode::NoError,
-                1 => ResponseCode::FormatError,
-                2 => ResponseCode::ServerError,
-                3 => ResponseCode::NameError,
-                _ => unimplemented!()
-            },
-        }))
+        ))
     })(input)
 }
 
