@@ -99,3 +99,57 @@ fn name_segment(input: &[u8]) -> IResult<&[u8], &str> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::message::{Flags, Header, Message, Query, QueryResponse, ResponseCode};
+    use super::parse_message;
+
+    #[test]
+    fn parses_dns_query() {
+        let message = parse_message(get_valid_query()).unwrap();
+        assert_eq!(message, get_expected_message())
+    }
+
+    #[test]
+    fn fails_on_invalid_query() {
+        let message = parse_message(get_invalid_query()).ok();
+        assert_eq!(message, None)
+    }
+
+    fn get_expected_message() -> Message {
+        Message {
+            header: Header {
+                transaction_id: 5538,
+                flags: Flags {
+                    message_type: QueryResponse::Query,
+                    response_code: ResponseCode::NoError,
+                },
+                num_questions: 1,
+                num_answers: 0,
+                num_authorities: 0,
+                num_additionals: 1,
+            },
+            queries: vec![Query {
+                name: "www.bengesoff.uk.tld.com".to_string(),
+                resource_type: 0,
+                class: 256,
+            }],
+        }
+    }
+
+    fn get_valid_query() -> &'static [u8] {
+        &[
+            21, 162, 1, 32, 0, 1, 0, 0, 0, 0, 0, 1, 3, 119, 119, 119, 9, 98, 101, 110, 103, 101,
+            115, 111, 102, 102, 2, 117, 107, 3, 116, 108, 100, 3, 99, 111, 109, 0, 0, 1, 0, 1, 0,
+            0, 41, 16,
+        ]
+    }
+
+    fn get_invalid_query() -> &'static [u8] {
+        &[
+            115, 111, 102, 102, 2, 117, 107, 3, 116, 108, 100, 3, 99, 111, 109, 0, 0, 1, 0, 1, 0,
+            0, 41, 16,
+        ]
+    }
+}

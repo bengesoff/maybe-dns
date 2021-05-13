@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Message {
     pub header: Header,
     pub queries: Vec<Query>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Header {
     pub transaction_id: u16,
     pub flags: Flags,
@@ -14,26 +14,26 @@ pub struct Header {
     pub num_additionals: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Query {
     pub name: String,
     pub resource_type: u16,
     pub class: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Flags {
     pub message_type: QueryResponse,
     pub response_code: ResponseCode,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum QueryResponse {
     Query,
     Response,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ResponseCode {
     NoError,
     FormatError,
